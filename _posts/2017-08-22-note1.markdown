@@ -1,0 +1,195 @@
+---
+layout: post
+title: python正则总结
+date: 2017-08-22 20:51:24.000000000 +09:00
+---
+\d [0-9] 
+\D 非 \d 
+\s 表示空字符 
+\S 非空字符 
+\w [a-zA-Z0-9_] 
+\W 非 \w
+re.S 加上后。能匹配\n
+
+贪婪匹配问题 
+
+假设我有一个<h1>the first</h1><h1>the second</h1>
+
+我想获得第一个<h1>the first</h1>
+
+那么我们可能得到这个匹配公式
+
+>>> re.match('<h1>.+</h1>','<h1>the first</h1><h1>the second</h1>')
+
+但是我们得到的结果是什么？
+
+<_sre.SRE_Match object; span=(0, 37), match='<h1>the first</h1><h1>the second</h1>'>
+
+可见匹配并没有在第一个</h1>处停下，它匹配到第二个</h1>可见这是贪婪的
+
+那我们如何制止这个贪婪模式 ? 我们需要用到？号
+
+？除了匹配0个或者1个以外  还有启用非贪婪模式的功能
+
+>>> re.match('<h1>.+?</h1>','<h1>the first</h1><h1>the second</h1>')
+
+<_sre.SRE_Match object; span=(0, 18), match='<h1>the first</h1>'>
+我们加了?号后 非贪婪模式
+
+那还有其他实例吗
+>>> re.match('[0-9]?','1')
+<_sre.SRE_Match object; span=(0, 1), match='1'>
+>>> re.match('[0-9]??','1')
+<_sre.SRE_Match object; span=(0, 0), match=''>
+
+？号是0个或者1个字符  双重？号 即对？号的非贪婪模式 所以它会选择匹配0个
+
+依次类推
+
+>>> re.match('[0-9]*?','134234')
+<_sre.SRE_Match object; span=(0, 0), match=''>
+>>> re.match('[0-9]+?','134234')
+<_sre.SRE_Match object; span=(0, 1), match='1'>
+
+正则表达式如何分组匹配
+>>> result=re.match('hello (\w+)','hello world')
+>>> result.group(0)
+'hello world'
+>>> result.group(1)
+'world'
+>>> result.groups()
+('world',)
+正则匹配分组匹配
+>>> result=re.match('(((\d{4})-\d{2})-\d{2})','2016-01-01')
+>>> result.group()
+'2016-01-01'
+>>> result.group(1)
+'2016-01-01'
+>>> result.group(2)
+'2016-01'
+>>> result.group(3)
+'2016'
+>>> result.group(3)
+
+m.string    匹配的字符串
+m.re      m的正则表达式
+m.pos   匹配的第一个位置
+m.enpos 匹配的最后一个位置
+m.lastindex 最后一个index 即总共的个数
+m.group(1,2) m的第一个和第二个（）
+m.groups()m的分组的信息 不包括没在（）里的
+m.start(2) m的第二个分组的开始字符位置
+m.span() m的字符串截取范围
+m.end(2) m的第二个分组的截至字符位置
+m.expand()
+print r"m.expand(r'\2 \1\3'):", m.expand(r'\2 \1\3')
+重新分配分组输出
+特殊情况 . 并不是匹配所有字符 ，它不能匹配\n字符
+
+（二）正则表达式中的反斜杠 \
+
+如果我们想匹配\我们该怎么匹配呢
+
+我们理所当然这样写哈：
+>>> re.match('\\','\a')
+
+然后我们会得到一堆异常
+
+其实原因是python字符串对\本身就含有特殊意义 比如对\n \t 
+
+例如
+
+
+>>> a='\n'
+>>> a
+'\n'
+所以我们想在字符串里输入\ 我们应该这么写
+
+>>> a='\\'
+>>> a
+'\\'
+>>> print(a)
+\
+可见python\是\\
+但是我们把\\放进正则的时候 我们会发现 正则将\\看成一个转义字符
+毕竟我们输出\\也是一个\是吧 
+所以我们在正则中匹配\应该采用这种写法
+
+>>> re.match('\\\\[a-z]+','\\aa')
+<_sre.SRE_Match object; span=(0, 3), match='\\aa'>
+
+>>> re.match('\\?[0-z]+','?aa')
+<_sre.SRE_Match object; span=(0, 3), match='?aa'>
+
+
+但是这样写非常的头疼 假如我们有两个\\要匹配难道我们要打8个\吗 
+这时候我们要借助一个r (raw string)原生字符串 
+在原始字符串中，没有转义字符和不能打印的字符。这样就可以取消了\在字符串中的转义功能，即r"\
+
+\"
+>>> a=r'\a'
+>>> a
+'\\a'
+>>> a='\a'
+>>> a
+'\x07'
+原生字符串的作用和他名字一样 屏蔽掉python对字符串中\的特殊作用
+但是对\'还是有特殊作用的
+
+那么正则中匹配\我们就可以这样写了
+>>> re.match(r'\\[a-z]+','\\abcd')
+<_sre.SRE_Match object; span=(0, 5), match='\\abcd'>
+
+
+Windows路径的“正统”写法应该是：
+
+path = os.path.normcase("c:/mydir/mysubdir/")
+
+os.path.normcase在Windows平台下会自动把正斜杠转换成反斜杠。
+
+match和search的区别
+>>> re.match('com','www.baidu.com')
+>>> re.search('com','www.baidu.com')
+<_sre.SRE_Match object; span=(10, 13), match='com'>
+
+(?P<name>)  (P=name)
+
+re.sub 替换 
+>>> re.sub(r'z.*y','cali','zhaoliying')
+'caliing'
+>>> re.sub(r'z.*y','cali','dddzhaoliying')
+'dddcaliing'
+
+零宽度断言
+?=ing 零宽度先行断言，表示？号后能匹配ing
+>>> re.findall(r'.*(?=ing)','readingbook')
+['read', '']
+
+?<=ing 零宽度正回顾后发断言,表示?号之前可以匹配ing
+>>> re.findall(r'(?<=ing).*','readingbook')
+['book']
+
+?!=ing 零宽度负预测先行断言 表示?号后不能匹配ing的语句
+可以解决‘queiw iweorq Index qieo' 匹配一个以q开头。不以u结尾的单词
+b\w*q[^u]\w*\b会出错 把空格当成[^u]
+
+>>> a="aiew qdiao    qudij   sjq  Inte"
+>>> re.findall(r'\w*q(?!u)\w*',a)
+['qdiao', 'sjq']
+
+?!<=ing 零宽度负回顾后发断言 表示?号前不能匹配ing的语句
+>>> k='aa1 bb2 CC4'
+>>> re.findall(r'(?<![a-z])\d+',k)
+['4']
+
+>>> re.findall(r'(?<=<(\w{3})>)(.*)(?=<\/\1>)','<div>hi everyone</div> <span>what every 
+
+one</span>')
+[('div', 'hi everyone')]
+负向零宽断言中不能有不确定长度的表达式：
+所以不得不把\w+改成\w{3}
+
+?! 之后的字符串内容不匹配 则输出
+
+a(?!\d)
+
