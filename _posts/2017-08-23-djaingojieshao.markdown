@@ -3,7 +3,7 @@ layout: post
 title: Django
 date: 2017-08-23 10:56:24.000000000 +09:00
 ---
-创立一个web项目 submit
+create submit
 django-admin.py startproject submit
 
 创立一个templates 文件夹用于保存html文件

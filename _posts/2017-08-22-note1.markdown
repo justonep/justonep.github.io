@@ -1,6 +1,6 @@
 ---
 layout: post
-title: python正则总结
+title: 正则NFA引擎功能总结
 date: 2017-08-22 20:51:24.000000000 +09:00
 ---
 \d [0-9] 
